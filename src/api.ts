@@ -87,6 +87,20 @@ export const api = {
     }
   },
 
+  getImageKitAuth: async (): Promise<{
+    token: string;
+    expire: number;
+    signature: string;
+    publicKey: string;
+    urlEndpoint: string;
+  }> => {
+    const response = await fetch(`${API_BASE_URL}/imagekit/auth`);
+    if (!response.ok) {
+      throw new Error('Failed to get ImageKit authorization parameters');
+    }
+    return response.json();
+  },
+
   // ─── Orders ──────────────────────────────────────────────────────────────
 
   createOrder: async (cartItems: CartItem[]): Promise<{ success: boolean; errors: string[] }> => {

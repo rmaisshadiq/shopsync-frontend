@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Product } from '../types';
+import { api } from '../api';
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
   const [imageUrl, setImageUrl] = useState('');
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -39,6 +41,48 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
   }, [product, isOpen]);
 
   if (!isOpen) return null;
+
+  // ── ImageKit Client-side Upload ──────────────────────────────────────────
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setError('');
+    setIsUploading(true);
+
+    try {
+      // 1. Fetch secure authentication parameters from the Go backend
+      const auth = await api.getImageKitAuth();
+
+      // 2. Prepare FormData payload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('fileName', file.name);
+      formData.append('publicKey', auth.publicKey);
+      formData.append('signature', auth.signature);
+      formData.append('expire', auth.expire.toString());
+      formData.append('token', auth.token);
+
+      // 3. POST the file directly to ImageKit's upload endpoint
+      const response = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.message || 'Upload failed');
+      }
+
+      // 4. Update the imageUrl state with the resulting CDN URL
+      const data = await response.json();
+      setImageUrl(data.url);
+    } catch (err: any) {
+      setError(err.message || 'Failed to upload image. Please verify ImageKit credentials.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,14 +208,48 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1">IMAGE URL</label>
-            <input
-              type="url"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-text focus:outline-none focus:border-primary transition-colors text-sm"
-            />
+            <label className="block text-xs font-semibold text-slate-400 mb-1">PRODUCT IMAGE</label>
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-text focus:outline-none focus:border-primary transition-colors text-sm"
+                />
+              </div>
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={isUploading}
+                  id="image-file-input"
+                  className="hidden"
+                />
+                <label
+                  htmlFor="image-file-input"
+                  className={`px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-750 text-slate-300 font-semibold text-sm transition-colors cursor-pointer flex items-center gap-1.5 h-10 select-none ${
+                    isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isUploading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-slate-300 border-t-transparent rounded-full animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                      Upload
+                    </>
+                  )}
+                </label>
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-3 justify-end pt-4 border-t border-slate-800 mt-6">
@@ -184,7 +262,7 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploading}
               className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-slate-900 font-semibold text-sm transition-colors flex items-center gap-1.5 disabled:opacity-50"
             >
               {isSubmitting && (
