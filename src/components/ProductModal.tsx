@@ -128,13 +128,13 @@ export function ProductModal({ isOpen, onClose, product, onSave }: ProductModalP
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">PRICE ($)</label>
+              <label className="block text-xs font-semibold text-slate-400 mb-1">PRICE (Rp)</label>
               <input
                 type="number"
                 step="0.01"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                placeholder="29.99"
+                placeholder="50000"
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-text focus:outline-none focus:border-primary transition-colors text-sm"
                 required
               />

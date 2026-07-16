@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import type { Product, CartItem } from '../types';
+import { formatRp } from '../utils/format';
 
 interface ProductGridProps {
   products: Product[];
@@ -70,7 +71,7 @@ export function ProductGrid({ products, onAddToCart, cart, isAdmin, onEdit, onDe
               <div className="flex justify-between items-start mb-2">
                 <h3 className="text-lg font-bold text-text truncate pr-2">{product.name}</h3>
                 <span className="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full font-semibold whitespace-nowrap">
-                  ${product.price.toFixed(2)}
+                  {formatRp(product.price)}
                 </span>
               </div>
               <p className="text-sm text-slate-400 line-clamp-2 mb-4">{product.description}</p>

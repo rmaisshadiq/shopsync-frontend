@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import type { CartItem } from '../types';
+import { formatRp } from '../utils/format';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -115,9 +116,9 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onCheckout }: Checko
                     <p className="text-xs text-slate-500">{item.product.category}</p>
                   </div>
                   <div className="text-right ml-4 flex-shrink-0">
-                    <p className="text-primary font-semibold">${(item.product.price * item.quantity).toFixed(2)}</p>
+                    <p className="text-primary font-semibold">{formatRp(item.product.price * item.quantity)}</p>
                     <p className="text-xs text-slate-500">
-                      {item.quantity} × ${item.product.price.toFixed(2)}
+                      {item.quantity} × {formatRp(item.product.price)}
                     </p>
                   </div>
                 </div>
@@ -135,7 +136,7 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onCheckout }: Checko
 
             <div className="flex justify-between items-center text-lg font-bold text-text mb-8">
               <span>Total:</span>
-              <span className="text-2xl text-primary">${total.toFixed(2)}</span>
+              <span className="text-2xl text-primary">{formatRp(total)}</span>
             </div>
 
             <button
