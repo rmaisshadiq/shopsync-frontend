@@ -3,6 +3,7 @@ import { SearchBar } from './components/SearchBar';
 import { ProductGrid } from './components/ProductGrid';
 import { CheckoutModal } from './components/CheckoutModal';
 import { ProductModal } from './components/ProductModal';
+import { AddToCartModal } from './components/AddToCartModal';
 import type { Product, CartItem } from './types';
 import { api } from './api';
 
@@ -26,6 +27,7 @@ function App() {
   const [cart, setCart] = useState<Map<string, CartItem>>(new Map());
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [cartLoaded, setCartLoaded] = useState(false);
+  const [pendingProduct, setPendingProduct] = useState<Product | null>(null);
 
   // ── Admin Mode state ──────────────────────────────────────────────────────
   const [isAdmin, setIsAdmin] = useState(false);
@@ -85,16 +87,26 @@ function App() {
   }, []);
 
   // ── Cart actions ──────────────────────────────────────────────────────────
-  const addToCart = useCallback((product: Product) => {
+  const openAddToCart = useCallback((product: Product) => {
+    setPendingProduct(product);
+  }, []);
+
+  const addToCart = useCallback((product: Product, quantity: number) => {
     setCart((prev) => {
       const next = new Map(prev);
       const existing = next.get(product.id);
       next.set(product.id, {
         product,
-        quantity: existing ? existing.quantity + 1 : 1,
+        quantity: existing ? existing.quantity + quantity : quantity,
       });
       return next;
     });
+  }, []);
+
+  const clearCart = useCallback(() => {
+    if (!window.confirm('Remove all items from your cart?')) return;
+    setCart(new Map());
+    api.deleteCart().catch(console.error);
   }, []);
 
   const cartItems = Array.from(cart.values());
@@ -286,7 +298,7 @@ function App() {
             {/* Product grid */}
             <ProductGrid
               products={displayProducts}
-              onAddToCart={addToCart}
+              onOpenAddToCart={openAddToCart}
               cart={cart}
               isAdmin={isAdmin}
               onEdit={handleEditClick}
@@ -353,6 +365,7 @@ function App() {
         onClose={() => setIsCheckoutOpen(false)}
         cartItems={cartItems}
         onCheckout={handleCheckout}
+        onClearCart={clearCart}
       />
 
       <ProductModal
@@ -360,6 +373,12 @@ function App() {
         onClose={() => setIsProductModalOpen(false)}
         product={editingProduct}
         onSave={handleSaveProduct}
+      />
+
+      <AddToCartModal
+        product={pendingProduct}
+        onClose={() => setPendingProduct(null)}
+        onConfirm={(product, qty) => addToCart(product, qty)}
       />
     </div>
   );

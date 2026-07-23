@@ -5,14 +5,14 @@ import { formatRp } from '../utils/format';
 
 interface ProductGridProps {
   products: Product[];
-  onAddToCart?: (product: Product) => void;
+  onOpenAddToCart?: (product: Product) => void;
   cart?: Map<string, CartItem>;
   isAdmin?: boolean;
   onEdit?: (product: Product) => void;
   onDelete?: (id: string) => void;
 }
 
-export function ProductGrid({ products, onAddToCart, cart, isAdmin, onEdit, onDelete }: ProductGridProps) {
+export function ProductGrid({ products, onOpenAddToCart, cart, isAdmin, onEdit, onDelete }: ProductGridProps) {
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -104,15 +104,15 @@ export function ProductGrid({ products, onAddToCart, cart, isAdmin, onEdit, onDe
                   </button>
                 </div>
               ) : (
-                onAddToCart && (
+                onOpenAddToCart && (
                   <button
                     id={`add-to-cart-${product.id}`}
-                    onClick={() => onAddToCart(product)}
+                    onClick={() => onOpenAddToCart(product)}
                     disabled={product.stock === 0}
                     className="w-full bg-slate-800 hover:bg-primary hover:text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                     {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
                   </button>
